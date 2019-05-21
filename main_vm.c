@@ -1,37 +1,19 @@
 /*
-Progetto virtual machine 2018-2019
+CT0442 Progetto virtual machine 2018-2019
 Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 */
-#include "es_vm.h"
+
+/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm es_vm.c main_vm.c */
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "es_vm.h"
 
 int main(){
 
-	FILE *input;
-	int lung_riga;
-	size_t n = 0;
-	char *riga;
-	
-	/* Lettura test del file assembly.cvm */
-	input = fopen("assembly.cvm", "r");	
-	if(input){
-	
-		while((lung_riga = getline(&riga, &n, input)) != -1){
-			printf("%s\n", riga);
-			free(riga);
-			riga = NULL;
-		}
-		free(riga);
-		fclose(input);
+	const char *nome_file = "assembly.cvm";
+	int *stack; /* Vettore 64 KB */
 		
-	}else{
-		printf("Errore apertura file\n");
-	}
-	
-	
-	return 0;
+	return creazione_stack(nome_file, stack);
 }
-
-
