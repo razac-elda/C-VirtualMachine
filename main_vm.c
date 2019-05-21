@@ -3,12 +3,12 @@ CT0442 Progetto virtual machine 2018-2019
 Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 */
 
-/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm es_vm.c main_vm.c */
+/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_vm.c main_vm.c */
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "es_vm.h"
+#include "fun_vm.h"
 
 int main(){
 
