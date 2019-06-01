@@ -8,12 +8,19 @@ Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "fun_vm.h"
 
 int main(){
 
 	const char *nome_file = "assembly.cvm";
-	int *stack; /* Vettore 64 KB */
-		
-	return creazione_stack(nome_file, stack);
+	/* Struct con vettore 64 KB e stack pointer. */
+	s_stack stack; 
+	/* Vettore contenente le istruzioni e valori. */
+	int *vet_istruzioni = NULL; 
+	int dim_vet;
+	int corretto;
+	corretto = creazione_vettore(nome_file, vet_istruzioni, &dim_vet); /* Memory leak!? */
+	free(vet_istruzioni);
+	return 0;
 }

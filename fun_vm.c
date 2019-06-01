@@ -8,145 +8,174 @@ Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "fun_vm.h"
-void halt(){		
+
+void halt(){
+
+	return;
 }
 
-void display(int registro){
-	printf("%d", registro);
+void display(){
+
+	return;
 }
 
-void print_stack(int n){
-
+void print_stack(){
+	
+	return;
 }
 
 void push(){
-
+	
+	return;
 }
 
 void pop(){
-
+	
+	return;
 }
 
 void mov(){
-
+	
+	return;
 }
 
 void call(){
-
+	
+	return;
 }
 
 void ret(){
-
+	
+	return;
 }
 
 void jmp(){
-
+	
+	return;
 }
 
 void jz(){
-
+	
+	return;
 }
 
 void jpos(){
-
+	
+	return;
 }
 
 void jneg(){
-
+	
+	return;
 }
 
 void add(){
-
+	
+	return;
 }
 
 void sub(){
-
+	
+	return;
 }
 
 void mul(){
-
+	
+	return;
 }
 
-void div(){
-
+void div_reg(){
+	
+	return;
 }
 
-void scelta(int num){
-	switch case(num){
-		case 0: halt();
-			break;
-		case 1: display();
-			break;
-		case 2: print_stack();
-			break;
-		case 10: push();
-			 break;
-		case 11: pop();
-			break;
-		casse 12: mov();
-			break;
-		case 20: call();
-			break;
-		case 21: ret();
-			break;
-		case 22: jmp();
-			break;
-		case 23: jz();
-			break;
-		case 24: jpos();
-			break;
-		case 25: jpos();
-			break;
-		case 30: add();
-			break;
-		case 31: sub();
-			break;
-		case 32: mul();
-			break;
-		case 33: div();
-			break;
-		default case: printf("Istruzione non trovata\n");
-
+void interprete(int *vet_istruzioni, int dim_vet, s_stack stack){
+	int indice_istruzione = 0;
+	while(indice_istruzione < dim_vet){
+		switch (vet_istruzioni[indice_istruzione]){
+			case 0: halt();
+					break;
+			case 1: display();
+					break;
+			case 2: print_stack();
+					break;
+			case 10: push();
+					break;
+			case 11: pop();
+					break;
+			case 12: mov();
+					break;
+			case 20: call();
+					break;
+			case 21: ret();
+					break;
+			case 22: jmp();
+					break;
+			case 23: jz();
+					break;
+			case 24: jpos();
+					break;
+			case 25: jpos();
+					break;
+			case 30: add();
+					break;
+			case 31: sub();
+					break;
+			case 32: mul();
+					break;
+			case 33: div_reg();
+					break;
+			default: printf("Istruzione non trovata\n");
+		}
+		indice_istruzione++;
+	}
+	return;
 }
 
-/* 1-Successo 0-Errore N-Errore personalizzato*/
-int creazione_stack(const char *file, int *stack){
+int creazione_vettore(const char *file, int *vet_istruzioni, int *dim_vet){
+
 	FILE *input;
-	int lung_riga;
-	size_t n = 0;
-	int *vet;
 	char *riga;
-	char *temp;
-	int num;
-	int i=0;
-	/* Lettura test del file */
-	input = fopen(file, "r");	
+	size_t buffer_size = 0;
+	int id_istruzione;
+	int indice_istruzione= -1;
+	
+	/* Apertura del file, ritorna 0 in caso di errore. */
+	input = fopen(file, "r");
 	if(input){
-		while((lung_riga = getline(&riga, &n, input)) != -1){
-			if(riga[0]>=48 && riga[0]<=57){
-				temp=strtok(riga,";");
-				num=atoi(temp);
-				if(i==0){
-					vet=(int*)malloc(sizeof(int)*num);
-					if(vet!=NULL)
-						i++;
+	
+		/* Lettura righe del file, se il primo carattere è un numero abbiamo trovato
+			un istruzione/valore e andiamo a convertirla per intero. */
+		while((getline(&riga, &buffer_size, input)) != -1){
+			if(riga[0] >= '0' && riga[0] <= '9'){
+				id_istruzione = atoi(strtok(riga,";"));
+				
+				/* Prima riga è la dimensione del vettore, indice a -1 per partire dalla
+					prima posizione al ciclo successivo alla creazione. */	
+				if(indice_istruzione == -1){
+					vet_istruzioni = (int*)malloc(sizeof(int) * id_istruzione);
+					/* Usiamo assert() per controllare le allocazioni in memoria */
+					assert(vet_istruzioni);
+					*dim_vet = id_istruzione;
+					indice_istruzione++;
 				}else{
-					vet[i-1]=num;
-					i++;
+					/* Inserimento delle istruzioni/valore nel vettore. */
+					vet_istruzioni[indice_istruzione] = id_istruzione;
+					indice_istruzione++;
 				}
+				
 			}
 			free(riga);
 			riga = NULL;
 		}
+		
 		free(riga);
 		fclose(input);
-		for(i=0;i<35;i++)
-			printf("%d\n", vet[i]);
-		free(vet);
 		return 1;
+		
 	}else{
-		printf("Errore apertura file\n");
 		return 0;
-	}
+	}	
 }
