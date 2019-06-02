@@ -18,9 +18,19 @@ int main(){
 	s_stack stack; 
 	/* Vettore contenente le istruzioni e valori. */
 	int *vet_istruzioni = NULL; 
-	int dim_vet;
-	int corretto;
-	corretto = creazione_vettore(nome_file, vet_istruzioni, &dim_vet); /* Memory leak!? */
+	int num_istruzioni;
+	int successo;
+	
+	/* Implementare un menu? */
+	/* Errori aritmetici, allocazione o overflow/underflow terminano il programma. */
+	successo = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
+	if(successo){
+		stack = getempty();
+		interprete(vet_istruzioni, num_istruzioni, &stack);
+	}else{
+		printf("Errore nell'apertura del file, controllare di aver inserito il nome corretto.\n");
+	}
 	free(vet_istruzioni);
+	free(stack.vet);
 	return 0;
 }
