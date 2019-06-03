@@ -90,7 +90,7 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 			free(riga);
 			riga = NULL;
 		}
-		/* Associamo il vettore del mail a quello temp. */
+		/* Associamo il vettore del main a quello temp. */
 		*vet_istruzioni = vet_temp;
 		free(riga);
 		fclose(input);
