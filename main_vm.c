@@ -8,7 +8,6 @@ Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "fun_vm.h"
 
 int main(){
@@ -19,16 +18,26 @@ int main(){
 	/* Vettore contenente le istruzioni e valori. */
 	int *vet_istruzioni = NULL; 
 	int num_istruzioni;
-	int successo;
+	int successo_creazione, errore_interprete;
 	
 	/* Implementare un menu? */
+	
 	/* Errori aritmetici, allocazione o overflow/underflow terminano il programma. */
-	successo = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
-	if(successo){
+	successo_creazione = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
+	if(successo_creazione == 1){
 		stack = getempty();
-		interprete(vet_istruzioni, num_istruzioni, &stack);
+		if(stack.vet){
+			errore_interprete = interprete(vet_istruzioni, num_istruzioni, &stack);
+			if(errore_interprete)
+				printf("Correggere il codice della macchina virtuale e riprovare.\n"); 
+		}else{
+			printf("Errore: allocazione stack non riuscita.\n");
+		}
 	}else{
-		printf("Errore nell'apertura del file, controllare di aver inserito il nome corretto.\n");
+		if(successo_creazione == 0)
+			printf("Errore nell'apertura del file, controllare di aver inserito il nome corretto.\n");
+		else
+			printf("Errore: allocazione vettore istruzioni non riuscita.\n");
 	}
 	free(vet_istruzioni);
 	free(stack.vet);

@@ -8,7 +8,6 @@ Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <assert.h>
 #include "fun_vm.h"
 
 /* Registri */
@@ -60,7 +59,7 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 	char *riga;
 	size_t buffer_size = 0;
 	int id_istruzione;
-	int ip= -1;
+	int ip = -1;
 	int *vet_temp;
 	/* Apertura del file, ritorna 0 in caso di errore. */
 	input = fopen(file, "r");
@@ -70,14 +69,17 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 			un istruzione/valore e andiamo a convertirla per intero. */
 		while((getline(&riga, &buffer_size, input)) != -1){
 			if(riga[0] >= '0' && riga[0] <= '9'){
-				id_istruzione = atoi(strtok(riga,";"));
+				id_istruzione = atoi(strtok(riga, ";"));
 				
 				/* Prima riga è la dimensione del vettore temp, indice a -1 per partire dalla
 					prima posizione al ciclo successivo alla creazione. */	
-				if(ip == -1){
+				if(ip == -1){ 
 					vet_temp = (int*)malloc(sizeof(int) * id_istruzione);
-					/* Usiamo assert() per controllare le allocazioni in memoria. */
-					assert(vet_temp && "Errore: allocazione vettore istruzioni non riuscita!");
+					if(!vet_temp){
+						free(riga);
+						fclose(input);
+						return -1;
+					}
 					*num_istruzioni = id_istruzione;
 					ip++;
 				}else{
@@ -105,11 +107,12 @@ s_stack getempty(){
 	s_stack ris;
 	/* Allocazione 65536 Bytes(64KB). */
 	ris.vet = (int*)malloc(65536);
-	assert(ris.vet && "Errore: allocazione stack non riuscita!");
-	/* Numero di interi contenibili(dim max) */
-	ris.dim = 65536/sizeof(int);
-	/* Stack pointer a 0. */
-	ris.sp = 0;
+	if(ris.vet){
+		/* Numero di interi contenibili(dim max) */
+		ris.dim = 65536 / sizeof(int);
+		/* Stack pointer a 0. */
+		ris.sp = 0;
+	}
 	return ris;
 }
 
@@ -122,18 +125,23 @@ void display(int registro, int *valore){
 	return;
 }
 
-void print_stack(){
-	
-	return;
+int print_stack(s_stack *stack, int n){
+	int lifo = stack->sp - 1;
+	while(lifo >= 0 && n > 0){
+		printf("Stack pos %d: %d.\n", lifo, (stack->vet)[lifo]);
+		lifo--;
+		n--;
+	}
+	return stack->sp;
 }
 
 int push(s_stack *stack, int registro){
 	if(stack->sp < stack->dim){
 		(stack->vet)[stack->sp] = registro;
 		(stack->sp)++;
-		return 1;
+		return 0;
 	}else{
-		return 0;	
+		return 1;	
 	}
 }
 
@@ -141,9 +149,9 @@ int pop(s_stack *stack, int *registro){
 	if(!isempty(*stack)){
 		(stack->sp)--;
 		*registro = (stack->vet)[stack->sp];
-		return 1;
-	}else{
 		return 0;
+	}else{
+		return 1;
 	}
 }
 
@@ -182,39 +190,37 @@ void jneg(){
 	return;
 }
 
-void add(int *registro1, int *registro2, s_stack *stack){
-	int ris, of;
+int add(int *registro1, int *registro2, s_stack *stack){
+	int ris, of = 0;
 	ris = (*registro1) + (*registro2);
 	of = push(stack, ris);
-	assert(of && "Errore: stackoverflow.com!");
-	return;
+	return of;
 }
 
-void sub(int *registro1, int *registro2, s_stack *stack){
-	int ris, of;
+int sub(int *registro1, int *registro2, s_stack *stack){
+	int ris, of = 0;
 	ris = (*registro1) - (*registro2);
 	of = push(stack, ris);
-	assert(of && "Errore: stackoverflow.com!");
-	return;
+	return of;
 }
 
-void mul(int *registro1, int *registro2, s_stack *stack){
-	int ris, of;
+int mul(int *registro1, int *registro2, s_stack *stack){
+	int ris, of = 0;
 	ris = (*registro1) * (*registro2);
 	of = push(stack, ris);
-	assert(of && "Errore: stackoverflow.com!");
-	return;
+	return of;
 }
 
-void div_reg(int *registro1, int *registro2, s_stack *stack){
-	int ris, of;
+int div_reg(int *registro1, int *registro2, s_stack *stack){
+	int ris, of = 0;
 	ris = (*registro1) / (*registro2);
 	of = push(stack, ris);
-	assert(of && "Errore: stackoverflow.com!");
-	return;
+	return of;
 }
 
-void interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
+int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
+	/* Flag overflow e underflow */
+	int of = 0, uf = 0;
 	/* Instruction Pointer */
 	int ip = 0;
 	/* Parametro 1 e 2 sono i nomi dei registri o il numero. */
@@ -222,17 +228,20 @@ void interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 	/* Val 1 e 2 conterrano, quando necessario, gli indirizzi dei registri corrispondenti a P1 e P2.
 		Dereferenziare per il valore. */
 	int *val1, *val2;
-	/* Test */
-	int registro;
-	int i;
-	/* Se un istruzione non è corretta esco. */
+	int stack_dim;
+	
+	/* Se un istruzione non è corretta o ci sono errori torno al main segnalando il tipo di errore. */
 	while(ip < num_istruzioni){
 		switch (vet_istruzioni[ip]){
 			case 0:	/* HALT */
-				return;
+				return 0;
 			case 1:	/* DISPLAY */
 			
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
 				/* Unico parametro di display. */
 				p1 = vet_istruzioni[ip];
 				if(p1 >= 0 && p1 <= 31){
@@ -240,33 +249,101 @@ void interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val1 = indirizzo_registro(p1);
 					display(p1, val1);
 				}else{
-					printf("Registro R%d non valido a riga %d.\n", p1, ip-1);
-					ip = num_istruzioni;
+					printf("Registro R%d non valido in posizione %d.\n", p1, ip-1);
+					return 1;
 				}
 				break;
 				
 			case 2:	/* PRINT */
-				print_stack();
-				break;
-			case 10:	/* PUSH */
-				i=push(stack, registro);
-				break;
-			case 11:	/* POP */
-				i=pop(stack, &registro);
-				break;
-			case 12:	/* MOV */
+				
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				p1 = vet_istruzioni[ip];
+				printf("===STACK LAST===\n");
+				stack_dim = print_stack(stack, p1);
+				printf("===STACK FIRST===\n");
+				if(stack_dim == p1){
+					printf("Tutto lo stack e' stato stampato(%d posizione/i).\n\n", p1);
+				}else{
+					if(stack_dim < p1){
+						if(stack_dim == 0)
+							printf("Lo stack e' vuoto.\n\n");
+						else
+							printf("E' stato possibile stampare solo %d posizione/i.\n\n", stack_dim);
+					}else{
+						printf("%d posizione/i stampata/e.\n\n", p1);
+					}
+				}
+				break;
+				
+			case 10:	/* PUSH */
+			
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				p1 = vet_istruzioni[ip];
+				if(p1 >= 0 && p1 <= 31){
+					val1 = indirizzo_registro(p1);
+					of = push(stack, *val1);
+					if(of){
+						printf("Errore: stackoverflow.com\n");
+						return 1;	
+					}
+				}else{
+					printf("Registro R%d non valido in posizione %d.\n", p1, ip-1);
+					return 1;
+				}
+				break;
+				
+			case 11:	/* POP */
+			
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				p1 = vet_istruzioni[ip];
+				if(p1 >= 0 && p1 <= 31){
+					val1 = indirizzo_registro(p1);
+					uf = pop(stack, val1);
+					if(uf){
+						printf("Errore: stackoverflow.com\n");
+						return 1;	
+					}
+				}else{
+					printf("Registro R%d non valido in posizione %d.\n", p1, ip-1);
+					return 1;
+				}
+				break;
+				
+			case 12:	/* MOV */
+			
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
 				p1 = vet_istruzioni[ip];
 				if(p1 >= 0 && p1 <= 31){
 					val1 = indirizzo_registro(p1);
 					ip++;
+					if(ip >= num_istruzioni){
+						printf("Errore: parametri insufficienti in posizione %d.\n", ip-2);
+						return 1;
+					}
 					p2 = vet_istruzioni[ip];
 					mov(val1, p2);
 				}else{
-					printf("Registro R%d non valido a riga %d.\n", p1, ip-2);
-					ip = num_istruzioni;
+					printf("Registro R%d non valido in posizione %d.\n", p1, ip-2);
+					return 1;
 				}
 				break;
+				
 			case 20:	/* CALL */
 				call();
 				break;
@@ -289,105 +366,156 @@ void interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 			case 30:	/* ADD */
 			
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
 				p1 = vet_istruzioni[ip];
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-2);
+					return 1;
+				}
 				p2 = vet_istruzioni[ip];
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
-					add(val1, val2, stack);
+					of = add(val1, val2, stack);
+					if(of){
+						printf("Errore: stackoverflow.com\n");
+						return 1;	
+					}
 				}else{
 					/* Trovo il o i registri errati da segnalare. */
 					if(p1 >= 0 && p1 <= 31){
-						printf("Registro R%d non valido a riga %d.\n", p2, ip-2);
+						printf("Registro R%d non valido in posizione %d.\n", p2, ip-2);
 					}else{
 						if(p2 >= 0 && p2 <= 31)
-							printf("Registro R%d non valido a riga %d.\n", p1, ip-2);
+							printf("Registro R%d non valido in posizione %d.\n", p1, ip-2);
 						else
-							printf("Registri R%d e R%d non validi a riga %d.\n", p1, p2, ip-2);
+							printf("Registri R%d e R%d non validi in posizione %d.\n", p1, p2, ip-2);
 					}
-					ip = num_istruzioni;
+					return 1;
 				}
 				break;
 				
 			case 31:	/* SUB */
 			
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
 				p1 = vet_istruzioni[ip];
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-2);
+					return 1;
+				}
 				p2 = vet_istruzioni[ip];
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
-					sub(val1, val2, stack);
+					of = sub(val1, val2, stack);
+					if(of){
+						printf("Errore: stackoverflow.com\n");
+						return 1;	
+					}
 				}else{
 					/* Trovo il o i registri errati da segnalare. */
 					if(p1 >= 0 && p1 <= 31){
-						printf("Registro R%d non valido a riga %d.\n", p2, ip-2);
+						printf("Registro R%d non valido in posizione %d.\n", p2, ip-2);
 					}else{
 						if(p2 >= 0 && p2 <= 31)
-							printf("Registro R%d non valido a riga %d.\n", p1, ip-2);
+							printf("Registro R%d non valido in posizione %d.\n", p1, ip-2);
 						else
-							printf("Registri R%d e R%d non validi a riga %d.\n", p1, p2, ip-2);
+							printf("Registri R%d e R%d non validi in posizione %d.\n", p1, p2, ip-2);
 					}
-					ip = num_istruzioni;
+					return 1;
 				}
 				break;
 				
 			case 32:	/* MUL */
 			
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
 				p1 = vet_istruzioni[ip];
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-2);
+					return 1;
+				}
 				p2 = vet_istruzioni[ip];
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
-					mul(val1, val2, stack);
+					of = mul(val1, val2, stack);
+					if(of){
+						printf("Errore: stackoverflow.com\n");
+						return 1;	
+					}
 				}else{
 					/* Trovo il o i registri errati da segnalare. */
 					if(p1 >= 0 && p1 <= 31){
-						printf("Registro R%d non valido a riga %d.\n", p2, ip-2);
+						printf("Registro R%d non valido in posizione %d.\n", p2, ip-2);
 					}else{
 						if(p2 >= 0 && p2 <= 31)
-							printf("Registro R%d non valido a riga %d.\n", p1, ip-2);
+							printf("Registro R%d non valido in posizione %d.\n", p1, ip-2);
 						else
-							printf("Registri R%d e R%d non validi a riga %d.\n", p1, p2, ip-2);
+							printf("Registri R%d e R%d non validi in posizione %d.\n", p1, p2, ip-2);
 					}
-					ip = num_istruzioni;
+					return 1;
 				}
 				break;
 				
 			case 33:	/* DIV */
 			
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
 				p1 = vet_istruzioni[ip];
 				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-2);
+					return 1;
+				}
 				p2 = vet_istruzioni[ip];
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
-					val1 = indirizzo_registro(0);
-					val2 = indirizzo_registro(1);
-					assert(*val2 && "Errore: divisione per zero!");
-					div_reg(val1, val2, stack);
+					val1 = indirizzo_registro(p1);
+					val2 = indirizzo_registro(p2);
+					if(val2 == 0){
+						printf("Errore: divisione per zero in posizione %d.\n", ip-2);
+						return 1;
+					}
+					of = div_reg(val1, val2, stack);
+					if(of){
+						printf("Errore: stackoverflow.com\n");
+						return 1;	
+					}
 				}else{
 					/* Trovo il o i registri errati da segnalare. */
 					if(p1 >= 0 && p1 <= 31){
-						printf("Registro R%d non valido a riga %d.\n", p2, ip-2);
+						printf("Registro R%d non valido in posizione %d.\n", p2, ip-2);
 					}else{
 						if(p2 >= 0 && p2 <= 31)
-							printf("Registro R%d non valido a riga %d.\n", p1, ip-2);
+							printf("Registro R%d non valido in posizione %d.\n", p1, ip-2);
 						else
-							printf("Registri R%d e R%d non validi a riga %d.\n", p1, p2, ip-2);
+							printf("Registri R%d e R%d non validi in posizione %d.\n", p1, p2, ip-2);
 					}
-					ip = num_istruzioni;
+					return 1;
 				}
 				break;
 				
-			default:
-				printf("Istruzione a riga %d non trovata.\n", ip);
-				ip = num_istruzioni;
+			default:	/* ISTRUZIONE NON TROVATA */
+				printf("Istruzione in posizione %d non trovata.\n", ip);
+				return 1;
 		}
 		ip++;
 	}
-	return;
+	return 0;
 }
