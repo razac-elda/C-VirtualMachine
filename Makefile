@@ -1,5 +1,5 @@
 #http://makefiletutorial.com/
-objects = fun_vm.o main_vm.o
+objects = fun_esegui_vm.o fun_stampa_vm.o main_vm.o
 eseguibile = vm_exe
 cflags = -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra 
 libs = -lm
