@@ -19,9 +19,6 @@ int main(){
 	int *vet_istruzioni = NULL; 
 	int num_istruzioni;
 	int successo_creazione, errore_interprete;
-	
-	/* Implementare un menu? */
-	
 	/* Errori aritmetici, allocazione o overflow/underflow terminano il programma. */
 	successo_creazione = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
 	if(successo_creazione == 1){

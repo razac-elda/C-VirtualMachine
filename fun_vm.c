@@ -53,6 +53,22 @@ int* indirizzo_registro(int nome_registro){
 	return NULL;
 }
 
+void shift(char *s){
+	if(s[0] != '\0'){
+		s[0] = s[1];
+		shift(s+1);
+	}
+}
+
+void elimina_spazi(char *s){
+	if(s[0] != '\0'){
+		if(s[0] == ' ')
+			shift(s);
+		else s++;
+		elimina_spazi(s);
+	}
+}
+
 int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzioni){
 
 	FILE *input;
@@ -68,9 +84,9 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 		/* Lettura righe del file, se il primo carattere è un numero abbiamo trovato
 			un istruzione/valore e andiamo a convertirla per intero. */
 		while((getline(&riga, &buffer_size, input)) != -1){
+			elimina_spazi(riga);
 			if(riga[0] >= '0' && riga[0] <= '9'){
 				id_istruzione = atoi(strtok(riga, ";"));
-				
 				/* Prima riga è la dimensione del vettore temp, indice a -1 per partire dalla
 					prima posizione al ciclo successivo alla creazione. */	
 				if(ip == -1){ 
@@ -121,17 +137,18 @@ int isempty(s_stack stack){
 }
 
 void display(int registro, int *valore){
-	printf("Registro R%d: %d.\n", registro, *valore);
+	printf("Registro R%d: %d\n", registro, *valore);
 	return;
 }
 
 int print_stack(s_stack *stack, int n){
 	int lifo = stack->sp - 1;
 	while(lifo >= 0 && n > 0){
-		printf("Stack pos %d: %d.\n", lifo, (stack->vet)[lifo]);
+		printf("Posizione %d: %d\n", lifo, (stack->vet)[lifo]);
 		lifo--;
 		n--;
 	}
+	/* Ritorno dimensione stack. */
 	return stack->sp;
 }
 
@@ -157,36 +174,6 @@ int pop(s_stack *stack, int *registro){
 
 void mov(int *registro, int numero){
 	*registro = numero;
-	return;
-}
-
-void call(){
-	
-	return;
-}
-
-void ret(){
-	
-	return;
-}
-
-void jmp(){
-	
-	return;
-}
-
-void jz(){
-	
-	return;
-}
-
-void jpos(){
-	
-	return;
-}
-
-void jneg(){
-	
 	return;
 }
 
@@ -228,9 +215,11 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 	/* Val 1 e 2 conterrano, quando necessario, gli indirizzi dei registri corrispondenti a P1 e P2.
 		Dereferenziare per il valore. */
 	int *val1, *val2;
+	/* Variabili per gestire lo stack. */
 	int stack_dim;
-	
+	int stack_val;
 	/* Se un istruzione non è corretta o ci sono errori torno al main segnalando il tipo di errore. */
+	printf("\n");
 	while(ip < num_istruzioni){
 		switch (vet_istruzioni[ip]){
 			case 0:	/* HALT */
@@ -242,7 +231,6 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
 					return 1;
 				}
-				/* Unico parametro di display. */
 				p1 = vet_istruzioni[ip];
 				if(p1 >= 0 && p1 <= 31){
 					/* Ottengo l'indirizzo del registro. */
@@ -262,9 +250,9 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					return 1;
 				}
 				p1 = vet_istruzioni[ip];
-				printf("===STACK LAST===\n");
+				printf("====STACK LAST====\n");
 				stack_dim = print_stack(stack, p1);
-				printf("===STACK FIRST===\n");
+				printf("====STACK FIRST====\n");
 				if(stack_dim == p1){
 					printf("Tutto lo stack e' stato stampato(%d posizione/i).\n\n", p1);
 				}else{
@@ -291,7 +279,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val1 = indirizzo_registro(p1);
 					of = push(stack, *val1);
 					if(of){
-						printf("Errore: stackoverflow.com\n");
+						printf("Errore: stack overflow\n");
 						return 1;	
 					}
 				}else{
@@ -312,7 +300,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val1 = indirizzo_registro(p1);
 					uf = pop(stack, val1);
 					if(uf){
-						printf("Errore: stackoverflow.com\n");
+						printf("Errore: stack underflow\n");
 						return 1;	
 					}
 				}else{
@@ -345,22 +333,124 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				break;
 				
 			case 20:	/* CALL */
-				call();
+			
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				p1 = vet_istruzioni[ip];
+				if(p1 >= 0 && p1 < num_istruzioni){
+					ip++;
+					if(ip >= num_istruzioni){
+						printf("Errore: parametri insufficienti in posizione %d.\n", ip-2);
+						return 1;
+					}
+					of = push(stack, ip);
+					if(of){
+						printf("Errore: stack overflow\n");
+						return 1;	
+					} 
+					ip = p1 - 1;
+				}else{
+					printf("Errore: call a %d salta ad un indirizzo non valido\n", ip-1);
+					return 1;
+				}
 				break;
+				
 			case 21:	/* RET */
-				ret();
+			
+				uf = pop(stack, &ip);
+				if(uf){
+					printf("Errore: stack underflow\n");
+					return 1;	
+				}
+				ip--;
 				break;
+				
 			case 22:	/* JMP */
-				jmp();
+				
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				p1 = vet_istruzioni[ip];
+				if(p1 > 0 && p1 < num_istruzioni){
+					ip = p1 - 1;
+				}else{
+					printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+					return 1;
+				}
 				break;
+				
 			case 23:	/* JZ */
-				jz();
+			
+				uf = pop(stack, &stack_val);
+				if(uf){
+					printf("Errore: stack underflow\n");
+					return 1;	
+				}
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				if(stack_val == 0){
+					p1 = vet_istruzioni[ip];
+					if(p1 > 0 && p1 < num_istruzioni){
+						ip = p1 - 1;
+					}else{
+						printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+						return 1;
+					}
+				}
 				break;
+				
 			case 24:	/* JPOS */
-				jpos();
+			
+				uf = pop(stack, &stack_val);
+				if(uf){
+					printf("Errore: stack underflow\n");
+					return 1;	
+				}
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				if(stack_val > 0){
+					p1 = vet_istruzioni[ip];
+					if(p1 > 0 && p1 < num_istruzioni){
+						ip = p1 - 1;
+					}else{
+						printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+						return 1;
+					}
+				}
 				break;
+				
 			case 25:	/* JNEG */
-				jneg();
+			
+				uf = pop(stack, &stack_val);
+				if(uf){
+					printf("Errore: stack underflow\n");
+					return 1;	
+				}
+				ip++;
+				if(ip >= num_istruzioni){
+					printf("Errore: parametri insufficienti in posizione %d.\n", ip-1);
+					return 1;
+				}
+				if(stack_val < 0){
+					p1 = vet_istruzioni[ip];
+					if(p1 > 0 && p1 < num_istruzioni){
+						ip = p1 - 1;
+					}else{
+						printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+						return 1;
+					}
+				}
 				break;
 				
 			case 30:	/* ADD */
@@ -382,7 +472,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val2 = indirizzo_registro(p2);
 					of = add(val1, val2, stack);
 					if(of){
-						printf("Errore: stackoverflow.com\n");
+						printf("Errore: stack overflow\n");
 						return 1;	
 					}
 				}else{
@@ -418,7 +508,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val2 = indirizzo_registro(p2);
 					of = sub(val1, val2, stack);
 					if(of){
-						printf("Errore: stackoverflow.com\n");
+						printf("Errore: stack overflow\n");
 						return 1;	
 					}
 				}else{
@@ -454,7 +544,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val2 = indirizzo_registro(p2);
 					of = mul(val1, val2, stack);
 					if(of){
-						printf("Errore: stackoverflow.com\n");
+						printf("Errore: stack overflow\n");
 						return 1;	
 					}
 				}else{
@@ -494,7 +584,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					}
 					of = div_reg(val1, val2, stack);
 					if(of){
-						printf("Errore: stackoverflow.com\n");
+						printf("Errore: stack overflow\n");
 						return 1;	
 					}
 				}else{
