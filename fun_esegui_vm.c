@@ -88,7 +88,7 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 			if(riga[0] >= '0' && riga[0] <= '9'){
 				id_istruzione = atoi(strtok(riga, ";"));
 				/* Prima riga è la dimensione del vettore temp, indice a -1 per partire dalla
-					prima posizione al ciclo successivo alla creazione. */	
+				prima posizione al ciclo successivo alla creazione. */	
 				if(ip == -1){ 
 					vet_temp = (int*)malloc(sizeof(int) * id_istruzione);
 					if(!vet_temp){
