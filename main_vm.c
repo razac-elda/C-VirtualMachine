@@ -20,7 +20,7 @@ int main(int argc, char *argv[]){
 		/* Vettore contenente le istruzioni e valori. */
 		int *vet_istruzioni = NULL; 
 		int num_istruzioni;
-		int successo_creazione, errore_interprete;
+		int successo_creazione, errore_interprete, errore_stampa;
 		/* Errori aritmetici, allocazione o overflow/underflow terminano il programma. */
 		successo_creazione = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
 		if(successo_creazione){
@@ -29,26 +29,29 @@ int main(int argc, char *argv[]){
 				if(stack.vet){
 					errore_interprete = interprete(vet_istruzioni, num_istruzioni, &stack);
 					if(errore_interprete)
-						printf("Correggere il codice della macchina virtuale e riprovare.\n"); 
+						printf("Correggere il codice della macchina virtuale e riprovare.\n\n"); 
 				}else{
-					printf("Errore: allocazione stack non riuscita.\n");
+					printf("\nErrore: allocazione stack non riuscita.\n\n");
 				}
 				free(stack.vet);
 			}else{
-				if(strcmp(comando, "stampa") == 0)
-					stampa(vet_istruzioni, num_istruzioni);
-				else
-					printf("Errore: comando non trovato.\n");
+				if(strcmp(comando, "stampa") == 0){
+					errore_stampa = stampa(vet_istruzioni, num_istruzioni);
+					if(errore_stampa)
+						printf("Correggere il codice della macchina virtuale e riprovare.\n\n"); 
+				}else{
+					printf("\nErrore: comando non trovato.\n\n");
+				}
 			}
 		}else{
 			if(successo_creazione == 0)
-				printf("Errore nell'apertura del file, controllare di aver inserito il nome corretto.\n");
+				printf("\nErrore nell'apertura del file, controllare di aver inserito il nome corretto.\n\n");
 			else
-			printf("Errore: allocazione vettore istruzioni non riuscita.\n");
+				printf("\nErrore: allocazione vettore non riuscita.\n\n");
 		}
 		free(vet_istruzioni);
 	}else{
-		printf("Errore lettura parametri.\n");
+		printf("\nErrore: specificare il comando \"esegui\" oppure \"stampa\".\n\n");
 	}
 	return 0;
 }
