@@ -16,6 +16,7 @@ int r0=0,r1=0,r2=0,r3=0,r4=0,r5=0,r6=0,r7=0,r8=0,r9=0,r10=0,
 	r11=0,r12=0,r13=0,r14=0,r15=0,r16=0,r17=0,r18=0,r19=0,r20=0,
 	r21=0,r22=0,r23=0,r24=0,r25=0,r26=0,r27=0,r28=0,r29=0,r30=0,r31=0;
 
+/* Tramite gli indirizzi possiamo lavorare sui registri. */
 int* indirizzo_registro(int nome_registro){
 	switch(nome_registro){
 		case 0: return &r0;
@@ -82,8 +83,9 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 	input = fopen(file, "r");
 	if(input){
 	
-		/* Lettura righe del file, se il primo carattere è un numero abbiamo trovato
-			un istruzione/valore e andiamo a convertirla per intero. */
+		/* Lettura righe del file, se il primo carattere e' un numero abbiamo trovato
+			un istruzione/valore e andiamo a convertirla per intero.
+			Controlliamo anche di non sforare con le righe segnalate nel sorgente. */
 		while((getline(&riga, &buffer_size, input)) != -1 && ip < *num_istruzioni){
 			elimina_spazi(riga);
 			if((riga[0] >= '0' && riga[0] <= '9') || (riga[0] == '-' && riga[1] >= '0' && riga[1] <= '9')){
@@ -178,6 +180,7 @@ void mov(int *registro, int numero){
 	return;
 }
 
+/* Le funzioni che svolgono operazioni aritmetiche ritornano 1 in caso di stackoverflow. */
 int add(int *registro1, int *registro2, s_stack *stack){
 	int ris, of = 0;
 	ris = (*registro1) + (*registro2);
@@ -206,6 +209,8 @@ int div_reg(int *registro1, int *registro2, s_stack *stack){
 	return of;
 }
 
+/* Il compito della funzione "interprete" e' quello di rilevare le istruzioni con i rispettivi parametri
+ed eseguirle, gestendo anche il flusso del programma, vengono anche implementati i controlli necessari. */
 int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 	/* Flag overflow e underflow */
 	int of = 0, uf = 0;
@@ -222,9 +227,15 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 	/* Se un istruzione non è corretta o ci sono errori torno al main segnalando il tipo di errore. */
 	printf("\n");
 	while(ip < num_istruzioni){
+		/* Ad ogni istruzione rilevata andiamo a leggere le posizioni successive a seconda 
+		del numero di parametri dell'istruzione. Sono presenti controlli per verificare che le istruzini
+		successive siano dei registri(se specificato dall'istruzione). */
 		switch (vet_istruzioni[ip]){
+		
 			case 0:	/* HALT */
+			
 				return 0;
+				
 			case 1:	/* DISPLAY */
 			
 				ip++;
@@ -608,7 +619,6 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 						return 1;	
 					}
 				}else{
-					/* Trovo il o i registri errati da segnalare. */
 					if(p1 >= 0 && p1 <= 31){
 						printf("Registro R%d non valido in posizione %d.\n", p2, ip-2);
 					}else{

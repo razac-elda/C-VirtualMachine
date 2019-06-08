@@ -13,6 +13,7 @@ Membri gruppo P1G129: Leonardo Mazzon 868445, Giulio Nicola 875297
 
 int main(int argc, char *argv[]){
 	if(argc == 3){
+		/* Parametri riga di comando. */
 		char *comando = argv[1];
 		const char *nome_file = argv[2];
 		/* Struct con vettore e stack pointer. */
@@ -24,6 +25,7 @@ int main(int argc, char *argv[]){
 		/* Errori aritmetici, allocazione o overflow/underflow terminano il programma. */
 		successo_creazione = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
 		if(successo_creazione){
+			/* Controlliamo quale comando e' stato scelto. */
 			if(strcmp(comando, "esegui") == 0){
 				stack = getempty();
 				if(stack.vet){
