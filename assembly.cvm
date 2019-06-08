@@ -1,42 +1,14 @@
 ;//Codice macchina
-37	;	numero linee(posizione massima)
+120	;	numero linee(posizione massima)
 12	;	[0] MOV R0 5
 0	;	[1]
 5	;	[2]
-20	;	[3] CALL fattoriale
-10	;	[4]
-1	;	[5] DISPLAY R30
-30	;	[6]
-2	;	[7]	PRINT_STACK 10
-10	;	[8]
+12	;	[0] MOV R1 5
+1	;	[1]
+-5	;	[2]
+32	;	[0] add R0 r1
+0	;	[1]
+1	;	[2]
+2
+2
 0	;	[9] HALT
-; fattoriale:
-12	;	[10] MOV R1 2
-1	;	[11]
-2	;	[12]
-12	;	[13] MOV R20 1
-20	;	[14]
-1	;	[15]
-12	;	[16] MOV R30 1
-30	;	[17]
-1	;	[18]
-; inizio:
-31	;	[19] SUB R0 R1
-0	;	[20]
-1	;	[21]
-25	;	[22] JNEG fine
-36	;	[23]
-32	;	[24] MUL R30 R1
-30	;	[25]
-1	;	[26]
-11	;	[27] POP R30
-30	;	[28]
-30	;	[29] ADD R1 R20
-1	;	[30]
-20	;	[31]
-11	;	[32] POP R1
-1	;	[33]
-22	;	[34] JMP inizio
-19	;	[35]
-; fine:
-21	;	[36] RET

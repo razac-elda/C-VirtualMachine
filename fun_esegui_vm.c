@@ -1,6 +1,6 @@
 /*
 CT0442 Progetto virtual machine 2018-2019
-Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
+Membri gruppo P1G129: Leonardo Mazzon 868445, Giulio Nicola 875297
 */
 
 /* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c */
@@ -8,6 +8,7 @@ Membri gruppo: Leonardo Mazzon 868445, Giulio Nicola 875297
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <limits.h>
 #include "fun_esegui_vm.h"
 
 /* Registri */
@@ -83,9 +84,9 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 	
 		/* Lettura righe del file, se il primo carattere è un numero abbiamo trovato
 			un istruzione/valore e andiamo a convertirla per intero. */
-		while((getline(&riga, &buffer_size, input)) != -1){
+		while((getline(&riga, &buffer_size, input)) != -1 && ip < *num_istruzioni){
 			elimina_spazi(riga);
-			if(riga[0] >= '0' && riga[0] <= '9'){
+			if((riga[0] >= '0' && riga[0] <= '9') || (riga[0] == '-' && riga[1] >= '0' && riga[1] <= '9')){
 				id_istruzione = atoi(strtok(riga, ";"));
 				/* Prima riga è la dimensione del vettore temp, indice a -1 per partire dalla
 				prima posizione al ciclo successivo alla creazione. */	
@@ -279,7 +280,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val1 = indirizzo_registro(p1);
 					of = push(stack, *val1);
 					if(of){
-						printf("Errore: stack overflow\n");
+						printf("Errore: stack overflow.\n");
 						return 1;	
 					}
 				}else{
@@ -300,7 +301,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					val1 = indirizzo_registro(p1);
 					uf = pop(stack, val1);
 					if(uf){
-						printf("Errore: stack underflow\n");
+						printf("Errore: stack underflow.\n");
 						return 1;	
 					}
 				}else{
@@ -348,12 +349,12 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					}
 					of = push(stack, ip);
 					if(of){
-						printf("Errore: stack overflow\n");
+						printf("Errore: stack overflow.\n");
 						return 1;	
 					} 
 					ip = p1 - 1;
 				}else{
-					printf("Errore: call a %d salta ad un indirizzo non valido\n", ip-1);
+					printf("Errore: call a %d salta ad un indirizzo non valido.\n", ip-1);
 					return 1;
 				}
 				break;
@@ -362,7 +363,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 			
 				uf = pop(stack, &ip);
 				if(uf){
-					printf("Errore: stack underflow\n");
+					printf("Errore: stack underflow.\n");
 					return 1;	
 				}
 				ip--;
@@ -379,7 +380,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if(p1 > 0 && p1 < num_istruzioni){
 					ip = p1 - 1;
 				}else{
-					printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+					printf("Errore: il jump a %d salta ad un indirizzo non valido.\n", ip-1);
 					return 1;
 				}
 				break;
@@ -388,7 +389,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 			
 				uf = pop(stack, &stack_val);
 				if(uf){
-					printf("Errore: stack underflow\n");
+					printf("Errore: stack underflow.\n");
 					return 1;	
 				}
 				ip++;
@@ -401,7 +402,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					if(p1 > 0 && p1 < num_istruzioni){
 						ip = p1 - 1;
 					}else{
-						printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+						printf("Errore: il jump a %d salta ad un indirizzo non valido.\n", ip-1);
 						return 1;
 					}
 				}
@@ -411,7 +412,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 			
 				uf = pop(stack, &stack_val);
 				if(uf){
-					printf("Errore: stack underflow\n");
+					printf("Errore: stack underflow.\n");
 					return 1;	
 				}
 				ip++;
@@ -424,7 +425,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					if(p1 > 0 && p1 < num_istruzioni){
 						ip = p1 - 1;
 					}else{
-						printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+						printf("Errore: il jump a %d salta ad un indirizzo non valido.\n", ip-1);
 						return 1;
 					}
 				}
@@ -434,7 +435,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 			
 				uf = pop(stack, &stack_val);
 				if(uf){
-					printf("Errore: stack underflow\n");
+					printf("Errore: stack underflow.\n");
 					return 1;	
 				}
 				ip++;
@@ -447,7 +448,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					if(p1 > 0 && p1 < num_istruzioni){
 						ip = p1 - 1;
 					}else{
-						printf("Errore: il jump a %d salta ad un indirizzo non valido\n", ip-1);
+						printf("Errore: il jump a %d salta ad un indirizzo non valido.\n", ip-1);
 						return 1;
 					}
 				}
@@ -470,9 +471,13 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					if((*val2 > 0 && *val1 > INT_MAX - *val2) || (*val2 < 0 && *val1 < INT_MIN - *val2)){
+						printf("Errore: la somma a riga %d causa overflow.\n", ip-2);
+						return 1;	
+					}
 					of = add(val1, val2, stack);
 					if(of){
-						printf("Errore: stack overflow\n");
+						printf("Errore: stack overflow.\n");
 						return 1;	
 					}
 				}else{
@@ -506,9 +511,13 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					if((*val2 > 0 && *val1 < INT_MIN + *val2) || (*val2 < 0 && *val1 > INT_MAX + *val2)){
+						printf("Errore: la sottrazione a riga %d causa underflow.\n", ip-2);
+						return 1;	
+					}
 					of = sub(val1, val2, stack);
 					if(of){
-						printf("Errore: stack overflow\n");
+						printf("Errore: stack overflow.\n");
 						return 1;	
 					}
 				}else{
@@ -542,9 +551,17 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					if(*val1 < 0){
+						*val1*=-1;
+						*val2*=-1;
+					}
+					if((*val2 > 0 && *val1 > INT_MAX / *val2) || (*val2 < 0 && *val1 > INT_MIN / *val2)){
+						printf("Errore: la moltiplicazione a riga %d causa overflow.\n", ip-2);
+						return 1;	
+					}
 					of = mul(val1, val2, stack);
 					if(of){
-						printf("Errore: stack overflow\n");
+						printf("Errore: stack overflow.\n");
 						return 1;	
 					}
 				}else{
@@ -578,13 +595,17 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
-					if(val2 == 0){
+					if(*val2 == 0){
 						printf("Errore: divisione per zero in posizione %d.\n", ip-2);
 						return 1;
 					}
+					if(*val1 == INT_MIN && *val2 == -1){
+						printf("Errore: la divisione a riga %d causa overflow.\n", ip-2);
+						return 1;	
+					}
 					of = div_reg(val1, val2, stack);
 					if(of){
-						printf("Errore: stack overflow\n");
+						printf("Errore: stack overflow.\n");
 						return 1;	
 					}
 				}else{
