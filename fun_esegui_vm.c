@@ -234,7 +234,6 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				}
 				p1 = vet_istruzioni[ip];
 				if(p1 >= 0 && p1 <= 31){
-					/* Ottengo l'indirizzo del registro. */
 					val1 = indirizzo_registro(p1);
 					display(p1, val1);
 				}else{

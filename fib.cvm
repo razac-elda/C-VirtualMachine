@@ -1,0 +1,54 @@
+;esercizio dal moodle
+52  ; Programma che stampa i primi n numeri della sequenza di fibonacci
+12  ;0
+0   ;1
+6  ;2   n (overflow si verifica a n = 47)
+12  ;3   MOV
+2   ;4   a = x - 2 salvato nel registro 2
+1   ;5
+12  ;6   MOV
+3   ;7
+1   ;8   b = x - 1 salvato nel registro 3
+12  ;9   MOV
+10  ;10
+1   ;11  costante 1 salvata nel registro 10
+31  ;12  SUB
+0   ;13
+10  ;14  n - 1 per evitare controllo uguaglianza if
+11  ;15  POP
+0   ;16
+1   ;17  DISPLAY
+2   ;18  stampa a
+1   ;19  DISPLAY
+3   ;20  stampa b
+12  ;21  MOV
+1   ;22  indice i salvato nel registro 1 utilizzato per ciclo while
+2   ;23  i = 2
+31  ;24  SUB  <- init_for
+0   ;25
+1   ;26  calcolo condizione if
+25  ;27  JNEG
+51  ;28  jump exit for
+30  ;29  ADD
+2   ;30
+3   ;31  a + b
+11  ;32  POP
+4   ;33  x =  a + b
+10  ;34  PUSH
+3   ;35  b in stack
+11  ;36  POP
+2   ;37  a = b
+10  ;38  PUSH
+4   ;39  x in stack
+11  ;40  POP
+3   ;41  b = x
+1   ;42  DISPLAY
+4   ;43  stampa x
+30  ;44  ADD
+10  ;45
+1   ;46  i + 1 in stack
+11  ;47  POP
+1   ;48  i = i + 1
+22  ;49  JUMP
+24  ;50  jump init_for
+0   ;51  <- exit for
