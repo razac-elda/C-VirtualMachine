@@ -11,6 +11,5 @@ struct s_stack{
 typedef struct s_stack s_stack;
 
 /* Firme funzioni */
-int creazione_vettore(const char *file, int **vet_istruzioni, int *dim_vet);
 int interprete(int *vet_istruzioni, int num_istruzioni, s_stack* stack);
 s_stack getempty();
