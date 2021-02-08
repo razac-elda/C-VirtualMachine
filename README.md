@@ -1,5 +1,5 @@
 # Implementation of a virtual machine
-### Ca'Foscari University - "C programming" project 2018-2019
+### Ca'Foscari University - "C programming" course project 2018-2019
 
 This project aims to implement a virtual machine with registers and a stack that execute machine code specified inside an array of integers.
 
