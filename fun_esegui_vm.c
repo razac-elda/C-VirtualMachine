@@ -3,18 +3,19 @@ CT0442 Progetto virtual machine 2018-2019
 Membri gruppo P1G129: Leonardo Mazzon 868445, Giulio Nicola 875297
 */
 
-/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c */
+/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c -lm*/
 
+/* Librerie */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>
 #include "fun_esegui_vm.h"
 
-/* Registri */
-int r0=0,r1=0,r2=0,r3=0,r4=0,r5=0,r6=0,r7=0,r8=0,r9=0,r10=0,
-	r11=0,r12=0,r13=0,r14=0,r15=0,r16=0,r17=0,r18=0,r19=0,r20=0,
-	r21=0,r22=0,r23=0,r24=0,r25=0,r26=0,r27=0,r28=0,r29=0,r30=0,r31=0;
+/* Registri. */
+int r0,r1,r2,r3,r4,r5,r6,r7,r8,r9,r10,
+	r11,r12,r13,r14,r15,r16,r17,r18,r19,r20,
+	r21,r22,r23,r24,r25,r26,r27,r28,r29,r30,r31;
 
 /* Tramite gli indirizzi possiamo lavorare sui registri. */
 int* indirizzo_registro(int nome_registro){
@@ -55,19 +56,6 @@ int* indirizzo_registro(int nome_registro){
 	return NULL;
 }
 
-s_stack getempty(){
-	s_stack ris;
-	/* Allocazione 65536 Bytes(64KB). */
-	ris.vet = (int*)malloc(65536);
-	if(ris.vet){
-		/* Numero di interi contenibili(dim max) */
-		ris.dim = 65536 / sizeof(int);
-		/* Stack pointer a 0. */
-		ris.sp = 0;
-	}
-	return ris;
-}
-
 int isempty(s_stack stack){
 	return (stack.sp == 0);
 }
@@ -88,6 +76,7 @@ int print_stack(s_stack *stack, int n){
 	return stack->sp;
 }
 
+/* Ritorna 1 in caso di overflow. */
 int push(s_stack *stack, int registro){
 	if(stack->sp < stack->dim){
 		(stack->vet)[stack->sp] = registro;
@@ -98,6 +87,7 @@ int push(s_stack *stack, int registro){
 	}
 }
 
+/* Ritorna 1 in caso di underflow. */
 int pop(s_stack *stack, int *registro){
 	if(!isempty(*stack)){
 		(stack->sp)--;
@@ -113,7 +103,7 @@ void mov(int *registro, int numero){
 	return;
 }
 
-/* Le funzioni che svolgono operazioni aritmetiche ritornano 1 in caso di stackoverflow. */
+/* Le funzioni che svolgono operazioni aritmetiche ritornano 1 in caso di stack overflow. */
 int add(int *registro1, int *registro2, s_stack *stack){
 	int ris, of = 0;
 	ris = (*registro1) + (*registro2);
@@ -143,8 +133,9 @@ int div_reg(int *registro1, int *registro2, s_stack *stack){
 }
 
 /* Il compito della funzione "interprete" e' quello di rilevare le istruzioni con i rispettivi parametri
-ed eseguirle, gestendo anche il flusso del programma, vengono anche implementati i controlli necessari. */
+ed eseguirle, gestendo il flusso del programma(jump e call), vengono anche implementati i controlli necessari. */
 int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
+
 	/* Flag overflow e underflow */
 	int of = 0, uf = 0;
 	/* Instruction Pointer */
@@ -152,17 +143,19 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 	/* Parametro 1 e 2 sono i nomi dei registri o il numero. */
 	int p1, p2;
 	/* Val 1 e 2 conterrano, quando necessario, gli indirizzi dei registri corrispondenti a P1 e P2.
-		Dereferenziare per il valore. */
+	Dereferenziare per il valore. */
 	int *val1, *val2;
 	/* Variabili per gestire lo stack. */
 	int stack_dim;
 	int stack_val;
-	/* Se un istruzione non è corretta o ci sono errori torno al main segnalando il tipo di errore. */
+	
 	printf("\n");
+	/* Se un istruzione non è corretta o ci sono errori torno al main segnalando il tipo di errore. */
 	while(ip < num_istruzioni){
 		/* Ad ogni istruzione rilevata andiamo a leggere le posizioni successive a seconda 
-		del numero di parametri dell'istruzione. Sono presenti controlli per verificare che le istruzini
-		successive siano dei registri(se specificato dall'istruzione). */
+		del numero di parametri dell'istruzione. Sono presenti controlli per verificare che i parametri
+		successivi siano dei registri(se specificato dall'istruzione). Si i parametri sforassero con le righe
+		si verifica un errore di parametri insufficienti. */
 		switch (vet_istruzioni[ip]){
 		
 			case 0:	/* HALT */
@@ -186,7 +179,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				}
 				break;
 				
-			case 2:	/* PRINT */
+			case 2:	/* PRINT_STACK */
 				
 				ip++;
 				if(ip >= num_istruzioni){
@@ -294,7 +287,9 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					if(of){
 						printf("Errore: stack overflow.\n");
 						return 1;	
-					} 
+					}
+					/* Effettuato un salto parto dalla posizione precedente, 
+					perche' alla fine del while la posizione aumenta. */
 					ip = p1 - 1;
 				}else{
 					printf("Errore: call a %d salta ad un indirizzo non valido.\n", ip-1);
@@ -309,6 +304,8 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 					printf("Errore: stack underflow.\n");
 					return 1;	
 				}
+				/* Effettuato un ritorno parto dalla posizione precedente, 
+				perche' alla fine del while la posizione aumenta. */
 				ip--;
 				break;
 				
@@ -414,6 +411,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					/* Controllo int overflow tramite limits.h. */
 					if((*val2 > 0 && *val1 > INT_MAX - *val2) || (*val2 < 0 && *val1 < INT_MIN - *val2)){
 						printf("Errore: la somma a riga %d causa overflow.\n", ip-2);
 						return 1;	
@@ -454,6 +452,7 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					/* Controllo int underflow tramite limits.h. */
 					if((*val2 > 0 && *val1 < INT_MIN + *val2) || (*val2 < 0 && *val1 > INT_MAX + *val2)){
 						printf("Errore: la sottrazione a riga %d causa underflow.\n", ip-2);
 						return 1;	
@@ -494,10 +493,13 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					/* Mantengo il formato (+) * (+) o (+) * (-).
+					I risultato rimangono invariati per le regole dei segni.*/
 					if(*val1 < 0){
 						*val1*=-1;
 						*val2*=-1;
 					}
+					/* Controllo int overflow tramite limits.h.*/
 					if((*val2 > 0 && *val1 > INT_MAX / *val2) || (*val2 < 0 && *val1 > INT_MIN / *val2)){
 						printf("Errore: la moltiplicazione a riga %d causa overflow.\n", ip-2);
 						return 1;	
@@ -538,10 +540,13 @@ int interprete(int *vet_istruzioni, int num_istruzioni, s_stack *stack){
 				if((p1 >= 0 && p1 <= 31) && (p2 >= 0 && p2 <= 31)){
 					val1 = indirizzo_registro(p1);
 					val2 = indirizzo_registro(p2);
+					/* Divisiore deve essere diverso da 0. */
 					if(*val2 == 0){
 						printf("Errore: divisione per zero in posizione %d.\n", ip-2);
 						return 1;
 					}
+					/* Controllo int overflow tramite limits.h. La divisone causa overflow
+					se divisiamo il valore piu' piccolo per -1. */
 					if(*val1 == INT_MIN && *val2 == -1){
 						printf("Errore: la divisione a riga %d causa overflow.\n", ip-2);
 						return 1;	

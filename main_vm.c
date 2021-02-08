@@ -3,8 +3,9 @@ CT0442 Progetto virtual machine 2018-2019
 Membri gruppo P1G129: Leonardo Mazzon 868445, Giulio Nicola 875297
 */
 
-/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c */
+/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c -lm*/
 
+/* Librerie */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,7 +23,8 @@ void elimina_spazi(char *s){
 	if(s[0] != '\0'){
 		if(s[0] == ' ')
 			shift(s);
-		else s++;
+		else
+			s++;
 		elimina_spazi(s);
 	}
 }
@@ -78,12 +80,25 @@ int creazione_vettore(const char *file, int **vet_istruzioni, int *num_istruzion
 	}	
 }
 
+s_stack getempty(){
+	s_stack ris;
+	/* Allocazione 65536 Bytes(64KB). */
+	ris.vet = (int*)malloc(65536);
+	if(ris.vet){
+		/* Numero di interi contenibili(dim max) */
+		ris.dim = 65536 / sizeof(int);
+		/* Stack pointer a 0. */
+		ris.sp = 0;
+	}
+	return ris;
+}
+
 int main(int argc, char *argv[]){
 	if(argc == 3){
 		/* Parametri riga di comando. */
 		char *comando = argv[1];
 		const char *nome_file = argv[2];
-		/* Struct con vettore e stack pointer. */
+		/* Struct con vettore, stack pointer e dimensione massima. */
 		s_stack stack; 
 		/* Vettore contenente le istruzioni e valori. */
 		int *vet_istruzioni = NULL; 
@@ -91,11 +106,13 @@ int main(int argc, char *argv[]){
 		int successo_creazione, errore_interprete, errore_stampa;
 		/* Errori aritmetici, allocazione o overflow/underflow terminano il programma. */
 		successo_creazione = creazione_vettore(nome_file, &vet_istruzioni, &num_istruzioni);
-		if(successo_creazione){
+		if(successo_creazione == 1){
 			/* Controlliamo quale comando e' stato scelto. */
 			if(strcmp(comando, "esegui") == 0){
+				/* Creazione stack 64KB. */
 				stack = getempty();
 				if(stack.vet){
+					/* Passaggio a fun_esegui_vm.c */
 					errore_interprete = interprete(vet_istruzioni, num_istruzioni, &stack);
 					if(errore_interprete)
 						printf("Correggere il codice della macchina virtuale e riprovare.\n"); 
@@ -105,6 +122,7 @@ int main(int argc, char *argv[]){
 				free(stack.vet);
 			}else{
 				if(strcmp(comando, "stampa") == 0){
+					/* Passaggio a fun_stampa_vm.c */
 					errore_stampa = stampa(vet_istruzioni, num_istruzioni);
 					if(errore_stampa)
 						printf("Correggere il codice della macchina virtuale e riprovare.\n"); 

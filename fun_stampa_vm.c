@@ -3,8 +3,9 @@ CT0442 Progetto virtual machine 2018-2019
 Membri gruppo P1G129: Leonardo Mazzon 868445, Giulio Nicola 875297
 */
 
-/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c */
+/* Compilazione: gcc -g3 -fsanitize=address -fsanitize=undefined -std=gnu89 -pedantic-errors -Wall -Wextra -o vm_exe fun_esegui_vm.c fun_stampa_vm.c main_vm.c -lm*/
 
+/* Librerie */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -69,7 +70,7 @@ int stampa(int *vet_istruzioni, int dim_vet){
 				
 			case 12:
 			
-				if(i+1 < dim_vet && i+2 < dim_vet){
+				if(i+2 < dim_vet){
 					printf("[ %d] MOV R%d %d\n", i, vet_istruzioni[i+1], vet_istruzioni[i+2]);
 					i+=3;
 					break;
@@ -141,7 +142,7 @@ int stampa(int *vet_istruzioni, int dim_vet){
 				
 			case 30:
 				
-				if(i+1 < dim_vet && i+2 < dim_vet){
+				if(i+2 < dim_vet){
 					printf("[ %d] ADD R%d R%d\n", i, vet_istruzioni[i+1], vet_istruzioni[i+2]);
 					i+=3;
 					break;
@@ -152,7 +153,7 @@ int stampa(int *vet_istruzioni, int dim_vet){
 				
 			case 31:
 			
-				if(i+1 < dim_vet && i+2 < dim_vet){
+				if(i+2 < dim_vet){
 					printf("[ %d] SUB R%d R%d\n", i, vet_istruzioni[i+1], vet_istruzioni[i+2]);
 					i+=3;
 					break;
@@ -163,7 +164,7 @@ int stampa(int *vet_istruzioni, int dim_vet){
 				
 			case 32:
 			
-				if(i+1 < dim_vet && i+2 < dim_vet){
+				if(i+2 < dim_vet){
 					printf("[ %d] MUL R%d R%d\n", i, vet_istruzioni[i+1], vet_istruzioni[i+2]);
 					i+=3;
 					break;
@@ -174,7 +175,7 @@ int stampa(int *vet_istruzioni, int dim_vet){
 				
 			case 33:
 			
-				if(i+1 < dim_vet && i+2 < dim_vet){
+				if(i+2 < dim_vet){
 					printf("[ %d] DIV R%d R%d\n", i, vet_istruzioni[i+1], vet_istruzioni[i+2]);
 					i+=3;
 					break;
